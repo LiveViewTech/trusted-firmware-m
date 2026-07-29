@@ -1,0 +1,504 @@
+version: 1
+facts:
+  languages:
+    - id: lang-c
+      value: C
+      evidence:
+        - CMakeLists.txt
+        - secure_fw/spm/core/main.c
+    - id: lang-cxx
+      value: C++
+      evidence:
+        - CMakeLists.txt
+    - id: lang-asm
+      value: Assembly
+      evidence:
+        - CMakeLists.txt
+    - id: lang-python
+      value: Python
+      evidence:
+        - tools/tfm_parse_manifest_list.py
+        - tools/requirements.txt
+    - id: lang-cmake
+      value: CMake
+      evidence:
+        - CMakeLists.txt
+        - cmake/version.cmake
+    - id: lang-kconfig
+      value: Kconfig
+      evidence:
+        - Kconfig
+        - Kconfig.bl
+  frameworks:
+    - id: fw-cmake
+      value: CMake (>=3.21)
+      evidence:
+        - CMakeLists.txt
+        - docs/building/tfm_build_instruction.rst
+    - id: fw-kconfig
+      value: Kconfig (kconfiglib)
+      evidence:
+        - config/kconfig.cmake
+        - tools/kconfig/tfm_kconfig.py
+        - tools/requirements.txt
+    - id: fw-zephyr-module
+      value: Zephyr module (cmake-ext, kconfig-ext)
+      evidence:
+        - zephyr/module.yml
+    - id: fw-sphinx
+      value: Sphinx documentation
+      evidence:
+        - docs/conf.py
+        - docs/requirements.txt
+        - .readthedocs.yaml
+    - id: fw-psa-ff-m
+      value: PSA Firmware Framework for M (IPC/SFN)
+      evidence:
+        - docs/introduction/readme.rst
+        - config/config_base.cmake
+  commands:
+    - id: cmd-pip-tools
+      name: install-tool-deps
+      value: pip3 install -r tools/requirements.txt
+      evidence:
+        - docs/getting_started/tfm_getting_started.rst
+        - tools/requirements.txt
+    - id: cmd-pip-docs
+      name: install-docs-deps
+      value: pip3 install -r docs/requirements.txt
+      evidence:
+        - docs/building/documentation_generation.rst
+        - docs/requirements.txt
+    - id: cmd-configure
+      name: configure-spe
+      value: cmake -S . -B build -DTFM_PLATFORM=arm/mps2/an521
+      evidence:
+        - docs/building/tfm_build_instruction.rst
+    - id: cmd-build
+      name: build-spe
+      value: cmake --build build -- install
+      evidence:
+        - docs/building/tfm_build_instruction.rst
+    - id: cmd-configure-debug
+      name: configure-spe-debug-armclang
+      value: cmake -S . -B build -DTFM_PLATFORM=arm/mps2/an521 -GNinja -DTFM_TOOLCHAIN_FILE=toolchain_ARMCLANG.cmake -DCMAKE_BUILD_TYPE=Debug
+      evidence:
+        - docs/building/tfm_build_instruction.rst
+    - id: cmd-docs-configure
+      name: configure-docs
+      value: cmake -S docs -B build_docs
+      evidence:
+        - docs/building/documentation_generation.rst
+    - id: cmd-docs-refman
+      name: build-docs-refman
+      value: cmake --build build_docs -- tfm_docs_refman_html tfm_docs_refman_pdf
+      evidence:
+        - docs/building/documentation_generation.rst
+    - id: cmd-docs-userguide
+      name: build-docs-userguide
+      value: cmake --build build_docs -- tfm_docs_userguide_html tfm_docs_userguide_pdf
+      evidence:
+        - docs/building/documentation_generation.rst
+    - id: cmd-clone-tests
+      name: clone-tf-m-tests
+      value: git clone https://git.trustedfirmware.org/TF-M/tf-m-tests.git
+      evidence:
+        - docs/building/tests_build_instruction.rst
+        - lib/ext/tf-m-tests/version.txt
+  entry_points:
+    - id: entry-root-cmake
+      value: CMakeLists.txt
+      evidence:
+        - CMakeLists.txt
+    - id: entry-spm-main
+      value: secure_fw/spm/core/main.c
+      evidence:
+        - secure_fw/spm/core/main.c
+        - secure_fw/CMakeLists.txt
+    - id: entry-bl2-main
+      value: bl2/ext/mcuboot/bl2_main.c
+      evidence:
+        - bl2/ext/mcuboot/bl2_main.c
+        - CMakeLists.txt
+    - id: entry-bl1-1-main
+      value: bl1/bl1_1/main.c
+      evidence:
+        - bl1/bl1_1/main.c
+        - CMakeLists.txt
+    - id: entry-bl1-2-main
+      value: bl1/bl1_2/main.c
+      evidence:
+        - bl1/bl1_2/main.c
+        - CMakeLists.txt
+    - id: entry-manifest-parser
+      value: tools/tfm_parse_manifest_list.py
+      evidence:
+        - tools/tfm_parse_manifest_list.py
+        - tools/tfm_manifest_list.yaml
+    - id: entry-zephyr-module
+      value: zephyr/module.yml
+      evidence:
+        - zephyr/module.yml
+  components:
+    - id: comp-bl1
+      name: BL1 bootloader stages
+      path: bl1
+      evidence:
+        - bl1/bl1_1/main.c
+        - bl1/bl1_2/main.c
+        - bl1/Kconfig
+    - id: comp-bl2
+      name: BL2 MCUboot secure boot
+      path: bl2
+      evidence:
+        - bl2/CMakeLists.txt
+        - bl2/ext/mcuboot/bl2_main.c
+        - bl2/src/flash_map.c
+    - id: comp-secure-fw
+      name: Secure Processing Environment firmware
+      path: secure_fw
+      evidence:
+        - secure_fw/CMakeLists.txt
+        - secure_fw/spm/core/main.c
+    - id: comp-spm
+      name: Secure Partition Manager
+      path: secure_fw/spm
+      evidence:
+        - secure_fw/spm/CMakeLists.txt
+        - secure_fw/spm/core/main.c
+        - secure_fw/spm/core/psa_api.c
+    - id: comp-partitions
+      name: Secure service partitions
+      path: secure_fw/partitions
+      evidence:
+        - secure_fw/partitions/CMakeLists.txt
+        - secure_fw/partitions/Kconfig
+        - secure_fw/partitions/crypto/crypto_init.c
+    - id: comp-platform
+      name: Platform HAL and targets
+      path: platform
+      evidence:
+        - platform/CMakeLists.txt
+        - platform/ext/common/boot_hal_bl2.c
+        - platform/Kconfig.platform
+    - id: comp-interface
+      name: PSA NS/S interface
+      path: interface
+      evidence:
+        - interface/CMakeLists.txt
+        - interface/include/psa/README.rst
+        - interface/src/tfm_tz_psa_ns_api.c
+    - id: comp-lib
+      name: Shared libraries and vendored deps
+      path: lib
+      evidence:
+        - lib/ext/CMakeLists.txt
+        - lib/fih/inc/fih.h
+        - lib/tfm_log/CMakeLists.txt
+    - id: comp-tools
+      name: Manifest and build tooling
+      path: tools
+      evidence:
+        - tools/CMakeLists.txt
+        - tools/tfm_parse_manifest_list.py
+        - tools/requirements.txt
+    - id: comp-config
+      name: Build and profile configuration
+      path: config
+      evidence:
+        - config/config_base.cmake
+        - config/set_config.cmake
+        - config/profile/profile_small.cmake
+    - id: comp-cmake
+      name: CMake helpers
+      path: cmake
+      evidence:
+        - cmake/version.cmake
+        - cmake/utils.cmake
+        - cmake/install.cmake
+    - id: comp-docs
+      name: Sphinx documentation
+      path: docs
+      evidence:
+        - docs/conf.py
+        - docs/index.rst
+        - docs/requirements.txt
+    - id: comp-zephyr
+      name: Zephyr module metadata
+      path: zephyr
+      evidence:
+        - zephyr/module.yml
+  dependencies:
+    - id: dep-mbedcrypto
+      name: Mbed TLS / Mbed Crypto (mbedtls-3.6.5)
+      type: external
+      evidence:
+        - config/config_base.cmake
+        - lib/ext/mbedcrypto/CMakeLists.txt
+    - id: dep-mcuboot
+      name: MCUboot (v2.2.0)
+      type: external
+      evidence:
+        - config/config_base.cmake
+        - lib/ext/mcuboot/CMakeLists.txt
+    - id: dep-cmsis
+      name: CMSIS_6 (v6.1.0)
+      type: external
+      evidence:
+        - lib/ext/cmsis/CMakeLists.txt
+    - id: dep-qcbor
+      name: QCBOR
+      type: external
+      evidence:
+        - lib/ext/CMakeLists.txt
+        - lib/ext/qcbor/CMakeLists.txt
+    - id: dep-t-cose
+      name: t_cose
+      type: external
+      evidence:
+        - lib/ext/CMakeLists.txt
+        - lib/ext/t_cose/CMakeLists.txt
+    - id: dep-psa-adac
+      name: psa-adac
+      type: external
+      evidence:
+        - config/config_base.cmake
+        - lib/ext/psa-adac/CMakeLists.txt
+    - id: dep-tf-m-tests
+      name: tf-m-tests (manual clone)
+      type: external
+      evidence:
+        - lib/ext/tf-m-tests/version.txt
+        - docs/building/tests_build_instruction.rst
+        - CMakeLists.txt
+    - id: dep-cryptocell
+      name: cryptocell-312-runtime
+      type: external
+      evidence:
+        - lib/ext/cryptocell-312-runtime/README.md
+    - id: dep-fih
+      name: Fault Injection Hardening (FIH)
+      type: internal
+      evidence:
+        - lib/fih/inc/fih.h
+        - lib/fih/src/fih.c
+  external_services:
+    - id: svc-readthedocs
+      value: Read the Docs (trustedfirmware-m.readthedocs.io)
+      evidence:
+        - .readthedocs.yaml
+        - docs/conf.py
+    - id: svc-tf-gerrit
+      value: Trusted Firmware Gerrit (review.trustedfirmware.org)
+      evidence:
+        - .gitreview
+        - docs/introduction/readme.rst
+    - id: svc-upstream-tfm
+      value: Upstream TF-M git (git.trustedfirmware.org)
+      evidence:
+        - README.md
+        - docs/introduction/readme.rst
+    - id: svc-github-deps
+      value: GitHub dependency remotes (Mbed-TLS, mcu-tools/mcuboot, ARM-software/CMSIS_6)
+      evidence:
+        - config/config_base.cmake
+        - lib/ext/mcuboot/CMakeLists.txt
+        - lib/ext/cmsis/CMakeLists.txt
+  testing:
+    - id: test-tf-m-tests
+      framework: tf-m-tests (regression / PSA Arch SPE extension)
+      evidence:
+        - docs/building/tests_build_instruction.rst
+        - lib/ext/tf-m-tests/version.txt
+        - CMakeLists.txt
+    - id: test-psa-arch
+      framework: PSA Architecture Test Suite (via tf-m-tests)
+      evidence:
+        - docs/building/tests_build_instruction.rst
+        - config/tests/Kconfig.test_psa_api
+analysis:
+  purpose:
+    value: "Zephyr fork of Trusted Firmware-M (v2.2.2): implements the Arm PSA Secure Processing Environment (secure boot, SPM, and Crypto/ITS/PS/FWU/Attestation services) for Cortex-M and dual-core platforms."
+    confidence: high
+    evidence_refs:
+      - entry-root-cmake
+      - entry-zephyr-module
+      - comp-secure-fw
+      - comp-docs
+      - fw-psa-ff-m
+      - fw-zephyr-module
+  architecture:
+    value: "Optional BL1 and MCUboot-based BL2 authenticate images; SPM (secure_fw/spm) enforces isolation and dispatches PSA IPC/SFN calls to secure partitions; NSPE clients use interface/ PSA APIs. Platform HAL under platform/ext/target supplies board-specific drivers. CMake + optional Kconfig select profiles, toolchain, and fetched deps under lib/ext."
+    confidence: high
+    evidence_refs:
+      - entry-spm-main
+      - entry-bl2-main
+      - comp-partitions
+      - comp-platform
+      - comp-interface
+      - comp-config
+      - fw-cmake
+  patterns:
+    - id: pat-cmake-fetchcontent
+      value: External deps default to DOWNLOAD via CMake FetchContent into build/lib/ext; override with *_PATH caches in config_base.cmake.
+      confidence: high
+      evidence_refs:
+        - dep-mbedcrypto
+        - dep-mcuboot
+        - comp-lib
+        - comp-config
+    - id: pat-manifest-codegen
+      value: Partition manifests (YAML) listed in tools/tfm_manifest_list.yaml are processed by tfm_parse_manifest_list.py to generate load info and interfaces.
+      confidence: high
+      evidence_refs:
+        - entry-manifest-parser
+        - comp-tools
+        - comp-partitions
+    - id: pat-profiles
+      value: Predefined TF-M profiles (small/medium/medium_arotless/large) under config/profile tune which services and isolation features are built.
+      confidence: high
+      evidence_refs:
+        - comp-config
+        - fw-psa-ff-m
+    - id: pat-toolchain-files
+      value: Cross-compile via TFM_TOOLCHAIN_FILE (GNUARM default; ARMCLANG, CLANG, IARARM alternatives at repo root).
+      confidence: high
+      evidence_refs:
+        - fw-cmake
+        - cmd-configure
+        - cmd-configure-debug
+        - comp-config
+    - id: pat-dco-signed-off
+      value: Contributions require git commit -s (DCO Signed-off-by) per contributing_process.rst.
+      confidence: high
+      evidence_refs:
+        - comp-docs
+  component_notes:
+    - ref: comp-bl1
+      purpose: Early boot stages (BL1_1/BL1_2) for platforms that enable BL1; OTP/provisioning and measurement before BL2.
+      confidence: high
+    - ref: comp-bl2
+      purpose: MCUboot-based second-stage secure boot validating SPE/NSPE images before jumping to secure firmware.
+      confidence: high
+    - ref: comp-secure-fw
+      purpose: SPE binary (tfm_s) aggregating SPM, shared runtime, and secure partitions.
+      confidence: high
+    - ref: comp-spm
+      purpose: Isolation setup (FIH-wrapped HAL), PSA API dispatch, IPC or SFN backend selection.
+      confidence: high
+    - ref: comp-partitions
+      purpose: PSA secure services (crypto, ITS, PS, attestation, FWU) plus NS agents and idle partition.
+      confidence: high
+    - ref: comp-platform
+      purpose: Vendor/board targets and common HAL (boot, faults, drivers); largest tree under platform/ext/target.
+      confidence: high
+    - ref: comp-interface
+      purpose: Headers and NS veneers for PSA Functional APIs consumed by NSPE after install to api_ns.
+      confidence: high
+    - ref: comp-lib
+      purpose: FIH, logging helpers, and FetchContent wrappers for Mbed Crypto, MCUboot, CMSIS, QCBOR, t_cose.
+      confidence: high
+    - ref: comp-tools
+      purpose: Python manifest parsing, Kconfig helper, image/signing utilities; needs tools/requirements.txt.
+      confidence: high
+    - ref: comp-config
+      purpose: Default CMake/Kconfig options, isolation/FIH/backend knobs, and profile presets.
+      confidence: high
+    - ref: comp-cmake
+      purpose: Version detection, install layout, remote_library and SPE CMake helpers.
+      confidence: high
+    - ref: comp-docs
+      purpose: Sphinx user guide and reference manuals; built via cmake -S docs or Read the Docs.
+      confidence: high
+    - ref: comp-zephyr
+      purpose: Declares this tree as Zephyr external module trusted-firmware-m with cmake/kconfig extensions and CPE metadata for TF-Mv2.2.2.
+      confidence: high
+  service_notes:
+    - ref: svc-readthedocs
+      purpose: Hosts published TF-M documentation builds from docs/.
+      integration: .readthedocs.yaml drives Sphinx with docs/requirements.txt on Ubuntu 22.04 / Python 3.11.
+      confidence: high
+    - ref: svc-tf-gerrit
+      purpose: Upstream review host for TF-M contributions.
+      integration: .gitreview points at review.trustedfirmware.org project TF-M/trusted-firmware-m.
+      confidence: high
+    - ref: svc-upstream-tfm
+      purpose: Canonical TF-M source this Zephyr fork tracks.
+      integration: README.md and introduction docs cite git.trustedfirmware.org/TF-M/trusted-firmware-m.git.
+      confidence: high
+    - ref: svc-github-deps
+      purpose: Source hosts for automatically fetched build dependencies.
+      integration: CMake DOWNLOAD paths pull mbedtls, mcuboot, CMSIS_6 from GitHub during configure.
+      confidence: high
+  dangerous_areas:
+    - id: dang-isolation-fih
+      value: TFM_ISOLATION_LEVEL and TFM_FIH_PROFILE change security guarantees and code paths in SPM/boot.
+      reason: Wrong level/profile can weaken isolation or alter FIH checks without obvious build failure; defaults are level 1 and FIH OFF.
+      confidence: high
+      evidence_refs:
+        - comp-config
+        - entry-spm-main
+        - dep-fih
+    - id: dang-platform-selection
+      value: TFM_PLATFORM must match a real path under platform/ext/target (or absolute out-of-tree path).
+      reason: Build is platform-specific; wrong/missing platform fails configure or produces unusable images.
+      confidence: high
+      evidence_refs:
+        - cmd-configure
+        - comp-platform
+        - comp-config
+    - id: dang-dep-download
+      value: Default DOWNLOAD fetches pinned third-party trees (network + exact tags required).
+      reason: Offline or tag mismatch breaks configure; localrepos.cmake / *_PATH overrides change provenance of crypto and boot code.
+      confidence: high
+      evidence_refs:
+        - dep-mbedcrypto
+        - dep-mcuboot
+        - entry-root-cmake
+        - pat-cmake-fetchcontent
+    - id: dang-tests-external
+      value: Regression/PSA tests live in separate tf-m-tests repo, not this tree.
+      reason: CONFIG_TFM_TEST_DIR only works if tests are cloned and revision matches lib/ext/tf-m-tests/version.txt (TF-Mv2.2.2).
+      confidence: high
+      evidence_refs:
+        - test-tf-m-tests
+        - cmd-clone-tests
+        - entry-root-cmake
+    - id: dang-keys-provisioning
+      value: Boot keys and OTP/provisioning under BL1/BL2 and platform HAL are security-critical.
+      reason: Tree ships sample PEMs and keys.c under bl2/ext/mcuboot/; production must replace these and align OTP/provisioning or secure boot authenticity fails.
+      confidence: high
+      evidence_refs:
+        - entry-bl2-main
+        - entry-bl1-1-main
+        - comp-bl2
+        - comp-platform
+  questions:
+    - id: q-liveview-fork-delta
+      question: Beyond Zephyr sync tagging noted in README.md, what LiveViewTech-specific patches or policies diverge this GitHub fork (LiveViewTech/trusted-firmware-m) from zephyrproject-rtos/trusted-firmware-m or upstream TF-M?
+      area: ownership / fork policy
+      priority: high
+      evidence_refs:
+        - entry-zephyr-module
+        - fw-zephyr-module
+    - id: q-default-platform-lvt
+      question: Which TFM_PLATFORM (if any) is the intended default for LiveViewTech products, given docs exemplify arm/mps2/an521?
+      area: platform
+      priority: high
+      evidence_refs:
+        - cmd-configure
+        - comp-platform
+    - id: q-zephyr-integration-path
+      question: How is this module consumed in Zephyr west manifests for LiveViewTech (module path, version pins, out-of-tree platforms)?
+      area: zephyr integration
+      priority: medium
+      evidence_refs:
+        - entry-zephyr-module
+        - fw-zephyr-module
+    - id: q-branch-strategy
+      question: What is the relationship and sync cadence between zephyr_tf-m_v2.2.2 and zephyr_tf-m_v2.3.0 branches on this remote?
+      area: release process
+      priority: medium
+      evidence_refs:
+        - entry-zephyr-module
+        - comp-cmake
