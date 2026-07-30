@@ -7,14 +7,6 @@ Zephyr fork of Trusted Firmware-M (v2.2.2): builds the Arm PSA Secure Processing
 - Tech: C/C++/ASM, CMake >=3.21, Kconfig, Python tooling, Sphinx docs
 - Type: single SPE firmware tree consumed as Zephyr module (`zephyr/module.yml`)
 - Version fallback: `TFM_VERSION_MANUAL` in `cmake/version.cmake` → 2.2.2
-- Subguides:
-  - `bl1/AGENTS.md`
-  - `bl2/AGENTS.md`
-  - `secure_fw/AGENTS.md`
-  - `platform/AGENTS.md`
-  - `interface/AGENTS.md`
-  - `tools/AGENTS.md`
-  - `config/AGENTS.md`
 
 ## Commands
 
@@ -40,16 +32,17 @@ git clone https://git.trustedfirmware.org/TF-M/tf-m-tests.git
 - Config: prefer CMake caches / profiles under `config/`; optional Kconfig via `USE_KCONFIG_TOOL` (`CMakeLists.txt`, `config/kconfig.cmake`)
 - Toolchains: `TFM_TOOLCHAIN_FILE` — default `toolchain_GNUARM.cmake`; also `toolchain_ARMCLANG.cmake`, `toolchain_CLANG.cmake`, `toolchain_IARARM.cmake`
 - Deps: default `DOWNLOAD` FetchContent; override with `MBEDCRYPTO_PATH` / `MCUBOOT_PATH` / `localrepos.cmake`
+- Partitions: register new ones in `tools/tfm_manifest_list.yaml`; do not hand-edit parser-generated outputs
 
 ## Directory Map
 
-- `bl1/` → `bl1/AGENTS.md`
-- `bl2/` → `bl2/AGENTS.md`
-- `secure_fw/` → `secure_fw/AGENTS.md`
-- `platform/` → `platform/AGENTS.md`
-- `interface/` → `interface/AGENTS.md`
-- `tools/` → `tools/AGENTS.md`
-- `config/` → `config/AGENTS.md`
+- `bl1/` — optional early boot (BL1_1/BL1_2); only when `BL1` and `PLATFORM_DEFAULT_BL1`
+- `bl2/` — MCUboot-based secure boot (default ON)
+- `secure_fw/` — SPM + PSA partitions (`tfm_s`)
+- `platform/` — board/vendor HAL; targets under `platform/ext/target/`
+- `interface/` — PSA headers + NS veneers (consumed from installed `api_ns`)
+- `tools/` — manifest codegen (`tfm_parse_manifest_list.py`), signing/conversion helpers
+- `config/` — CMake/Kconfig defaults, profiles, `check_config.cmake`
 - `lib/` — FIH (`lib/fih/`), logging, FetchContent wrappers (`lib/ext/`)
 - `cmake/` — version, install, utils
 - `docs/` — Sphinx sources; intro at `docs/introduction/readme.rst`
@@ -60,4 +53,5 @@ git clone https://git.trustedfirmware.org/TF-M/tf-m-tests.git
 - **`TFM_ISOLATION_LEVEL` / `TFM_FIH_PROFILE` / `CONFIG_TFM_SPM_BACKEND`** in `config/config_base.cmake` change security semantics (defaults: level 1, FIH OFF, SFN).
 - **`TFM_PLATFORM`** must resolve under `platform/ext/target/` (e.g. `arm/mps2/an521`) or an absolute out-of-tree path.
 - **Sample boot keys** live in `bl2/ext/mcuboot/` (`keys.c`, `root-*.pem`) — not for production.
+- **`BL1` defaults OFF** in `config/config_base.cmake`; built only when `BL1` and `PLATFORM_DEFAULT_BL1` are enabled.
 - Offline builds need `*_PATH` overrides or pre-populated FetchContent dirs; network required for default DOWNLOAD.
